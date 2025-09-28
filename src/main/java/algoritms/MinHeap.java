@@ -1,69 +1,181 @@
 package main.java.algoritms;
 
+import main.java.metrics.PerformanceMetrics;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MinHeap {
-    private ArrayList<Integer> heap;
+    private List<Integer> heap;
 
     public MinHeap() {
         heap = new ArrayList<>();
     }
+
+    public MinHeap(List<Integer> elements) {
+        heap = new ArrayList<>(elements);
+        buildHeap();
+    }
+
     private int parent(int i) { return (i - 1) / 2; }
     private int left(int i) { return 2 * i + 1; }
     private int right(int i) { return 2 * i + 2; }
-    public void insert(int key) {
-        heap.add(key);
-        int i = heap.size() - 1;
-        while (i > 0 && heap.get(parent(i)) > heap.get(i)) {
-            swap(i, parent(i));
-            i = parent(i);
+
+    private void buildHeap() {
+        for (int i = heap.size() / 2 - 1; i >= 0; i--) {
+            heapify(i);
         }
     }
-    public int extractMin() {
-        if (heap.isEmpty()) throw new RuntimeException("Heap is empty");
+
+    public PerformanceMetrics insert(int key) {
+        PerformanceMetrics metrics = new PerformanceMetrics();
+        metrics.incrementMemoryAllocations(4); // int allocation
+
+        heap.add(key);
+        metrics.incrementArrayAccesses();
+
+        int i = heap.size() - 1;
+        while (i > 0) {
+            metrics.incrementComparisons();
+            metrics.incrementArrayAccesses(2);
+            int parent = parent(i);
+            if (heap.get(parent) > heap.get(i)) {
+                swap(i, parent, metrics);
+                i = parent;
+            } else {
+                break;
+            }
+        }
+        return metrics;
+    }
+
+    public PerformanceMetrics extractMin() {
+        PerformanceMetrics metrics = new PerformanceMetrics();
+
+        if (heap.isEmpty()) {
+            throw new RuntimeException("Heap is empty");
+        }
+
+        if (heap.size() == 1) {
+            heap.remove(0);
+            metrics.incrementArrayAccesses();
+            return metrics;
+        }
 
         int root = heap.get(0);
+        metrics.incrementArrayAccesses();
+
         int last = heap.remove(heap.size() - 1);
-        if (!heap.isEmpty()) {
-            heap.set(0, last);
-            heapify(0);
-        }
-        return root;
+        metrics.incrementArrayAccesses();
+
+        heap.set(0, last);
+        metrics.incrementArrayAccesses();
+
+        heapify(0, metrics);
+        return metrics;
     }
-    public void decreaseKey(int i, int newVal) {
+
+    public int getMin() {
+        if (heap.isEmpty()) {
+            throw new RuntimeException("Heap is empty");
+        }
+        return heap.get(0);
+    }
+
+    public PerformanceMetrics decreaseKey(int i, int newVal) {
+        PerformanceMetrics metrics = new PerformanceMetrics();
+
+        if (i < 0 || i >= heap.size()) {
+            throw new IllegalArgumentException("Invalid index");
+        }
+
+        if (newVal > heap.get(i)) {
+            throw new IllegalArgumentException("New value is greater than current value");
+        }
+
         heap.set(i, newVal);
-        while (i > 0 && heap.get(parent(i)) > heap.get(i)) {
-            swap(i, parent(i));
-            i = parent(i);
+        metrics.incrementArrayAccesses();
+
+        while (i > 0) {
+            metrics.incrementComparisons();
+            metrics.incrementArrayAccesses(2);
+            int parent = parent(i);
+            if (heap.get(parent) > heap.get(i)) {
+                swap(i, parent, metrics);
+                i = parent;
+            } else {
+                break;
+            }
         }
+        return metrics;
     }
-    public void merge(MinHeap other) {
+
+    public PerformanceMetrics merge(MinHeap other) {
+        PerformanceMetrics metrics = new PerformanceMetrics();
+        metrics.incrementMemoryAllocations(other.heap.size() * 4);
+
         for (int val : other.heap) {
             insert(val);
         }
+        return metrics;
     }
 
     private void heapify(int i) {
-        int smallest = i;
-        int l = left(i);
-        int r = right(i);
+        heapify(i, new PerformanceMetrics());
+    }
 
-        if (l < heap.size() && heap.get(l) < heap.get(smallest)) {
-            smallest = l;
+    private void heapify(int i, PerformanceMetrics metrics) {
+        int smallest = i;
+        int left = left(i);
+        int right = right(i);
+
+        if (left < heap.size()) {
+            metrics.incrementComparisons();
+            metrics.incrementArrayAccesses(2);
+            if (heap.get(left) < heap.get(smallest)) {
+                smallest = left;
+            }
         }
-        if (r < heap.size() && heap.get(r) < heap.get(smallest)) {
-            smallest = r;
+
+        if (right < heap.size()) {
+            metrics.incrementComparisons();
+            metrics.incrementArrayAccesses(2);
+            if (heap.get(right) < heap.get(smallest)) {
+                smallest = right;
+            }
         }
+
         if (smallest != i) {
-            swap(i, smallest);
-            heapify(smallest);
+            swap(i, smallest, metrics);
+            heapify(smallest, metrics);
         }
     }
 
-    private void swap(int i, int j) {
-        int tmp = heap.get(i);
+    private void swap(int i, int j, PerformanceMetrics metrics) {
+        metrics.incrementArrayAccesses(4); // 2 reads + 2 writes
+        metrics.incrementSwaps();
+        int temp = heap.get(i);
         heap.set(i, heap.get(j));
-        heap.set(j, tmp);
+        heap.set(j, temp);
+    }
+
+    public boolean isEmpty() {
+        return heap.isEmpty();
+    }
+
+    public int size() {
+        return heap.size();
+    }
+
+    // Methods for testing without metrics
+    public void insertWithoutMetrics(int key) {
+        insert(key);
+    }
+
+    public int extractMinWithoutMetrics() {
+        if (heap.isEmpty()) throw new RuntimeException("Heap is empty");
+        int min = getMin();
+        extractMin();
+        return min;
     }
 
     public void printHeap() {
@@ -77,15 +189,9 @@ public class MinHeap {
         h1.insert(20);
         h1.insert(2);
         h1.printHeap();
-        System.out.println("Extract min: " + h1.extractMin());
-        h1.printHeap();
-        h1.decreaseKey(1, 1);
-        h1.printHeap();
-        MinHeap h2 = new MinHeap();
-        h2.insert(3);
-        h2.insert(15);
-        h1.merge(h2);
+
+        PerformanceMetrics metrics = h1.extractMin();
+        System.out.println("Extract min metrics: " + metrics);
         h1.printHeap();
     }
 }
-
