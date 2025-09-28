@@ -1,3 +1,5 @@
+package main.java.algoritms;
+
 public class ShellSort {
     public static void sort(int[] arr, String sequence) {
         int n = arr.length;
