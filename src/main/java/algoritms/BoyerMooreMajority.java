@@ -1,3 +1,5 @@
+package main.java.algoritms;
+
 public class BoyerMooreMajority {
 
     public static Integer findMajority(int[] nums) {

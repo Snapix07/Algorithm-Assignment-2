@@ -1,3 +1,4 @@
+package main.java.algoritms;
 public class insertionSort {
     private static int binarySearch(int[] arr, int key, int low, int high) {
         while (low <= high) {

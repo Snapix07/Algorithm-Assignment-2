@@ -1,3 +1,5 @@
+package main.java.algoritms;
+
 import java.util.ArrayList;
 
 public class MinHeap {
