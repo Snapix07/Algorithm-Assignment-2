@@ -6,8 +6,21 @@ import main.java.metrics.PerformanceMetrics;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class BenchmarkRunner {
+
+    private static void saveToCSV(String filename, String algorithm, int size, String dataType,
+                                  double durationMs, PerformanceMetrics metrics) {
+        try (FileWriter writer = new FileWriter(filename, true)) {
+            writer.write(String.format("%s,%d,%s,%.3f,%d,%d,%d%n",
+                    algorithm, size, dataType, durationMs,
+                    metrics.getComparisons(), metrics.getSwaps(), metrics.getArrayAccesses()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -46,16 +59,10 @@ public class BenchmarkRunner {
 
         String algorithmName = (algorithm == 1) ? "InsertionSort" : "SelectionSort";
 
-        System.out.println("\n=== Benchmark Results ===");
-        System.out.println("Algorithm: " + algorithmName);
-        System.out.println("Array size: " + size);
-        System.out.println("Data type: " + dataType);
-
         int[] array = generateArray(size, dataType);
-        int[] arrayCopy = Arrays.copyOf(array, array.length);
 
         long startTime = System.nanoTime();
-        PerformanceMetrics metrics = null;
+        PerformanceMetrics metrics;
 
         if (algorithm == 1) {
             metrics = insertionSort.sortWithMetrics(array);
@@ -68,20 +75,25 @@ public class BenchmarkRunner {
 
         boolean sortedCorrectly = isSorted(array);
 
+        System.out.println("\n=== Benchmark Results ===");
+        System.out.println("Algorithm: " + algorithmName);
+        System.out.println("Array size: " + size);
+        System.out.println("Data type: " + dataType);
         System.out.println("Time: " + durationMs + " ms");
         System.out.println("Sorted correctly: " + sortedCorrectly);
         System.out.println("Metrics: " + metrics);
 
-        // CSV output
-        System.out.println("\nCSV Format:");
-        System.out.printf("%s,%d,%s,%.3f,%d,%d,%d%n",
-                algorithmName, size, dataType, durationMs,
-                metrics.getComparisons(), metrics.getSwaps(), metrics.getArrayAccesses());
-
+        // Сохраняем результат в CSV
+        saveToCSV("results.csv", algorithmName, size, dataType, durationMs, metrics);
         scanner.close();
     }
 
     private static void runComprehensiveBenchmark() {
+        try (FileWriter writer = new FileWriter("results.csv", false)) {
+            writer.write("Algorithm,Size,DataType,Time(ms),Comparisons,Swaps,ArrayAccesses\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         int[] sizes = {100, 1000, 10000};
         String[] dataTypes = {"random", "sorted", "reverse", "nearly-sorted", "duplicates"};
         String[] algorithms = {"InsertionSort", "SelectionSort"};
@@ -103,7 +115,6 @@ public class BenchmarkRunner {
 
     private static void benchmarkAlgorithm(String algorithm, int size, String dataType) {
         int[] array = generateArray(size, dataType);
-        int[] arrayCopy = Arrays.copyOf(array, array.length);
 
         long startTime = System.nanoTime();
         PerformanceMetrics metrics = null;
@@ -117,9 +128,13 @@ public class BenchmarkRunner {
         long endTime = System.nanoTime();
         double durationMs = (endTime - startTime) / 1_000_000.0;
 
+        // Выводим в консоль
         System.out.printf("%s,%d,%s,%.3f,%d,%d,%d%n",
                 algorithm, size, dataType, durationMs,
                 metrics.getComparisons(), metrics.getSwaps(), metrics.getArrayAccesses());
+
+        // Сохраняем в CSV
+        saveToCSV("results.csv", algorithm, size, dataType, durationMs, metrics);
     }
 
     private static int[] generateArray(int size, String dataType) {
@@ -153,6 +168,7 @@ public class BenchmarkRunner {
         }
         return array;
     }
+
     private static boolean isSorted(int[] arr) {
         for (int i = 0; i < arr.length - 1; i++) {
             if (arr[i] > arr[i + 1]) {
