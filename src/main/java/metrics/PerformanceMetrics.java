@@ -12,6 +12,12 @@ public class PerformanceMetrics {
         this.arrayAccesses = 0;
         this.memoryAllocations = 0;
     }
+    public PerformanceMetrics(PerformanceMetrics other) {
+        this.comparisons = other.comparisons;
+        this.swaps = other.swaps;
+        this.arrayAccesses = other.arrayAccesses;
+        this.memoryAllocations = other.memoryAllocations;
+    }
 
     public void incrementComparisons() { comparisons++; }
     public void incrementComparisons(int count) { comparisons += count; }
@@ -31,6 +37,13 @@ public class PerformanceMetrics {
         swaps = 0;
         arrayAccesses = 0;
         memoryAllocations = 0;
+    }
+
+    public void add(PerformanceMetrics other) {
+        this.comparisons += other.comparisons;
+        this.swaps += other.swaps;
+        this.arrayAccesses += other.arrayAccesses;
+        this.memoryAllocations += other.memoryAllocations;
     }
 
     @Override

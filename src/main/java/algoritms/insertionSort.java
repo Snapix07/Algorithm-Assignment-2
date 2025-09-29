@@ -52,10 +52,12 @@ public class insertionSort {
 
         return metrics;
     }
+
     public static void sort(int[] arr) {
         if (arr == null) throw new IllegalArgumentException("Input array cannot be null");
         sortWithMetrics(arr);
     }
+
     public static void main(String[] args) {
         int[] arr = {4, 3, 7, 1, 9, 6};
         PerformanceMetrics metrics = sortWithMetrics(arr);

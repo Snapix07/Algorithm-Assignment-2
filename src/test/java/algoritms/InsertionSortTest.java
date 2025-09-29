@@ -1,9 +1,8 @@
 package test.java.algoritms;
+
 import main.java.algoritms.insertionSort;
 import main.java.metrics.PerformanceMetrics;
 import org.junit.jupiter.api.Test;
-
-import static main.java.algoritms.insertionSort.sort;
 import static org.junit.jupiter.api.Assertions.*;
 
 class InsertionSortTest {
@@ -42,6 +41,7 @@ class InsertionSortTest {
         insertionSort.sort(arr);
         assertArrayEquals(new int[]{1, 2, 3, 4, 5}, arr);
     }
+
     @Test
     void testSortWithMetrics() {
         int[] arr = {4, 3, 7, 1, 9, 6};
@@ -56,5 +56,12 @@ class InsertionSortTest {
         assertThrows(IllegalArgumentException.class, () -> {
             insertionSort.sort(null);
         });
+    }
+
+    @Test
+    void testDuplicates() {
+        int[] arr = {3, 1, 3, 1, 2};
+        insertionSort.sort(arr);
+        assertArrayEquals(new int[]{1, 1, 2, 3, 3}, arr);
     }
 }
